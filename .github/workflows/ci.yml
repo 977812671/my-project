@@ -1,32 +1,20 @@
-name: CI Pipeline
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
 jobs:
   build:
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      # 步骤 1: 检出代码（确保包含 package-lock.json）
+      - uses: actions/checkout@v4
 
+      # 步骤 2: 缓存 node_modules 和 package-lock.json
       - name: Cache Dependencies
         uses: actions/cache@v3
-        id: node-cache
+        id: cache-deps
         with:
           path: |
             node_modules
-            .npm
+            package-lock.json  # 明确缓存 package-lock.json
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
+      # 步骤 3: 仅在缓存未命中时安装依赖
       - name: Install Dependencies
-        if: steps.node-cache.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci  # 确保 package-lock.json 存在
